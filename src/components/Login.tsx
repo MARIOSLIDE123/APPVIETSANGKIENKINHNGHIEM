@@ -37,8 +37,14 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Tài khoản hoặc mật khẩu không chính xác.");
+        let errMsg = "Tài khoản hoặc mật khẩu không chính xác.";
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) errMsg = errData.error;
+        } catch (_) {
+          errMsg = `Không thể kết nối với máy chủ xác thực (Lỗi HTTP: ${response.status}). Hãy chắc chắn máy chủ Express (cổng 3000) đang hoạt động và bạn đã khởi động lại npm run dev.`;
+        }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
