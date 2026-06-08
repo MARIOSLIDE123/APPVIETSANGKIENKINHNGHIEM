@@ -4,8 +4,10 @@ import { StepRenderer } from "./components/StepRenderer";
 import { AIPanel } from "./components/AIPanel";
 import { ProjectManager } from "./components/ProjectManager";
 import { LandingPage } from "./components/LandingPage";
+import { Login } from "./components/Login";
+import { AdminPanel } from "./components/AdminPanel";
 import { Project } from "./types";
-import { BookOpen, FolderGit2, Sparkles, AlertCircle, Settings, ExternalLink } from "lucide-react";
+import { BookOpen, FolderGit2, Sparkles, AlertCircle, Settings, ExternalLink, LogOut, ShieldAlert } from "lucide-react";
 import { AVAILABLE_MODELS } from "./utils/geminiClient";
 
 // Pre-seeded high-quality Vietnamese pedagogical prototypes to allow instant use & evaluation
@@ -163,6 +165,8 @@ const INITIAL_DEMO_PROJECTS: Project[] = [
 ];
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<string | null>(() => localStorage.getItem("maris_current_user"));
+  const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>(INITIAL_DEMO_PROJECTS);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>("reversed-learning-tint-4");
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -176,7 +180,16 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState<string>(() => localStorage.getItem("gemini_selected_model") || "gemini-3-pro-preview");
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
 
+  // Pre-seed default authorized users if not initialized
   useEffect(() => {
+    const stored = localStorage.getItem("maris_authorized_users");
+    if (!stored) {
+      localStorage.setItem("maris_authorized_users", JSON.stringify(["giaovien@gmail.com", "thayco@gmail.com"]));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
     const hasKeys = localStorage.getItem("gemini_api_key_1") || 
                     localStorage.getItem("gemini_api_key_2") || 
                     localStorage.getItem("gemini_api_key_3") || 
@@ -184,7 +197,18 @@ export default function App() {
     if (!hasKeys) {
       setShowSettingsModal(true);
     }
-  }, []);
+  }, [currentUser]);
+
+  const handleLoginSuccess = (email: string) => {
+    localStorage.setItem("maris_current_user", email);
+    setCurrentUser(email);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("maris_current_user");
+    setCurrentUser(null);
+    setShowAdminPanel(false);
+  };
 
   const handleSaveSettings = (key1: string, key2: string, key3: string, model: string) => {
     localStorage.setItem("gemini_api_key_1", key1);
@@ -282,19 +306,33 @@ export default function App() {
     }
   };
 
+  if (!currentUser) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-800 antialiased selection:bg-purple-200 selection:text-purple-900">
       
       {/* Top Universal Navbar */}
       <header className="h-14 bg-white border-b border-slate-200 px-6 shrink-0 flex items-center justify-between z-10 select-none">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => setViewMode("workspace")}>
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF6B00] to-[#7C3AED] flex items-center justify-center text-white font-black text-sm shadow-sm">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setViewMode("workspace")}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FF6B00] to-[#7C3AED] flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
               M
             </div>
-            <span className="font-display font-black text-sm tracking-tight text-slate-800">
-              Viết sáng kiến kinh nghiệm cùng <span className="text-[#FF6B00]">Maris Slide</span> - ZALO: 0396.581.283
-            </span>
+            <div className="flex flex-col select-none">
+              <span className="font-display font-black text-sm tracking-tight text-slate-800 leading-tight">
+                Viết sáng kiến kinh nghiệm cùng <span className="text-[#FF6B00]">Maris Slide</span>
+              </span>
+              <a 
+                href="https://zalo.me/0396581283" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-[11px] text-[#7C3AED] hover:underline font-bold leading-none mt-0.5"
+              >
+                Zalo: 0396.581.283
+              </a>
+            </div>
           </div>
           
           {currentProject && viewMode === "workspace" && (
@@ -310,14 +348,15 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <a
-            href="https://zalo.me/0396581283"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="py-1.5 px-3.5 rounded-xl border border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-          >
-            <span>Liên hệ tư vấn khóa học & thiết kế: Zalo: 0396.581.283</span>
-          </a>
+          {currentUser === "marioslide.animation@gmail.com" && (
+            <button
+              onClick={() => setShowAdminPanel(true)}
+              className="py-1.5 px-3.5 rounded-xl border border-slate-200 text-slate-650 hover:text-slate-900 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <span>Quản trị User</span>
+            </button>
+          )}
 
           <button
             onClick={() => setShowSettingsModal(true)}
@@ -343,6 +382,14 @@ export default function App() {
             className="py-1.5 px-4 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold text-xs transition shadow-sm cursor-pointer"
           >
             + Khởi tạo mới
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-red-500 hover:bg-red-50 transition cursor-pointer flex items-center justify-center shrink-0"
+            title="Đăng xuất"
+          >
+            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
@@ -523,6 +570,9 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+      {showAdminPanel && (
+        <AdminPanel onClose={() => setShowAdminPanel(false)} />
       )}
     </div>
   );
