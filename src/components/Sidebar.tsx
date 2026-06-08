@@ -76,40 +76,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div className="w-[300px] h-screen bg-[#F8FAFC] border-r border-slate-200 flex flex-col shrink-0 select-none">
-      {/* Brand Header */}
-      <div className="p-6 border-b border-slate-100 flex flex-col gap-1.5 bg-white">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6B00] to-[#7C3AED] flex items-center justify-center text-white font-bold shadow-md shadow-orange-500/10">
-            <BookOpen className="w-5 h-5 text-white" />
+      {/* Global Progress Indicator at Top */}
+      {project && (
+        <div className="p-5 border-b border-slate-100 bg-white select-none">
+          <div className="flex items-center justify-between text-[11px] font-medium text-slate-600 mb-1.5">
+            <span>Tiến độ viết Sáng kiến</span>
+            <span className="text-purple-600 font-mono font-bold">{progressPct}%</span>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-sm leading-none tracking-tight text-slate-800">
-              Maris Slide
-            </h1>
-            <p className="text-[10px] text-slate-500 font-medium">Zalo: 0396.581.283</p>
+          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-500 ease-out ${
+                progressPct === 100 
+                  ? "bg-emerald-500" 
+                  : "bg-gradient-to-r from-[#FF6B00] to-[#7C3AED]"
+              }`}
+              style={{ width: `${progressPct}%` }}
+            />
           </div>
         </div>
-
-        {/* Global Progress Indicators */}
-        {project && (
-          <div className="mt-4 pt-4 border-t border-slate-100">
-            <div className="flex items-center justify-between text-[11px] font-medium text-slate-600 mb-1.5">
-              <span>Tiến độ viết Sáng kiến</span>
-              <span className="text-purple-600 font-mono font-bold">{progressPct}%</span>
-            </div>
-            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-500 ease-out ${
-                  progressPct === 100 
-                    ? "bg-emerald-500" 
-                    : "bg-gradient-to-r from-[#FF6B00] to-[#7C3AED]"
-                }`}
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Navigation list */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
@@ -157,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="bg-gradient-to-tr from-orange-50/50 to-purple-50/20 border border-orange-100 p-3 rounded-2xl text-[10px] text-slate-600 space-y-1">
           <span className="font-bold text-[#FF6B00] block uppercase tracking-wider">QC: Maris Slide</span>
           <p className="leading-relaxed">
-            Thiết kế slide báo cáo chuyên nghiệp, bài giảng điện tử E-learning đạt chuẩn Bộ GD&ĐT.
+            Đơn vị chuyên đào tạo và thiết kế bài giảng E-Learning, ứng dụng AI, học liệu số chuyên nghiệp.
           </p>
           <a
             href="https://zalo.me/0396581283"
