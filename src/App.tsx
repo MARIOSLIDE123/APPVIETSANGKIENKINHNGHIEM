@@ -3,6 +3,7 @@ import { Sidebar } from "./components/Sidebar";
 import { StepRenderer } from "./components/StepRenderer";
 import { AIPanel } from "./components/AIPanel";
 import { ProjectManager } from "./components/ProjectManager";
+import { LandingPage } from "./components/LandingPage";
 import { Project } from "./types";
 import { BookOpen, FolderGit2, Sparkles, AlertCircle, Settings, ExternalLink } from "lucide-react";
 import { AVAILABLE_MODELS } from "./utils/geminiClient";
@@ -167,34 +168,49 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [selectedTextForAI, setSelectedTextForAI] = useState<string>("");
   const [viewMode, setViewMode] = useState<"catalog" | "workspace">("workspace");
+  const [setupMode, setSetupMode] = useState<"landing" | "workspace">("workspace");
 
-  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem("gemini_api_key") || "");
-  const [selectedModel, setSelectedModel] = useState<string>(() => localStorage.getItem("gemini_selected_model") || "gemini-3-flash-preview");
+  const [apiKey1, setApiKey1] = useState<string>(() => localStorage.getItem("gemini_api_key_1") || "");
+  const [apiKey2, setApiKey2] = useState<string>(() => localStorage.getItem("gemini_api_key_2") || "");
+  const [apiKey3, setApiKey3] = useState<string>(() => localStorage.getItem("gemini_api_key_3") || "");
+  const [selectedModel, setSelectedModel] = useState<string>(() => localStorage.getItem("gemini_selected_model") || "gemini-3-pro-preview");
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!localStorage.getItem("gemini_api_key")) {
+    const hasKeys = localStorage.getItem("gemini_api_key_1") || 
+                    localStorage.getItem("gemini_api_key_2") || 
+                    localStorage.getItem("gemini_api_key_3") || 
+                    localStorage.getItem("gemini_api_key");
+    if (!hasKeys) {
       setShowSettingsModal(true);
     }
   }, []);
 
-  const handleSaveSettings = (key: string, model: string) => {
-    localStorage.setItem("gemini_api_key", key);
+  const handleSaveSettings = (key1: string, key2: string, key3: string, model: string) => {
+    localStorage.setItem("gemini_api_key_1", key1);
+    localStorage.setItem("gemini_api_key_2", key2);
+    localStorage.setItem("gemini_api_key_3", key3);
     localStorage.setItem("gemini_selected_model", model);
-    setApiKey(key);
+    setApiKey1(key1);
+    setApiKey2(key2);
+    setApiKey3(key3);
     setSelectedModel(model);
     setShowSettingsModal(false);
   };
 
-  const [modalKeyInput, setModalKeyInput] = useState(apiKey);
+  const [modalKey1Input, setModalKey1Input] = useState(apiKey1);
+  const [modalKey2Input, setModalKey2Input] = useState(apiKey2);
+  const [modalKey3Input, setModalKey3Input] = useState(apiKey3);
   const [modalModelInput, setModalModelInput] = useState(selectedModel);
 
   useEffect(() => {
     if (showSettingsModal) {
-      setModalKeyInput(apiKey);
+      setModalKey1Input(apiKey1);
+      setModalKey2Input(apiKey2);
+      setModalKey3Input(apiKey3);
       setModalModelInput(selectedModel);
     }
-  }, [showSettingsModal, apiKey, selectedModel]);
+  }, [showSettingsModal, apiKey1, apiKey2, apiKey3, selectedModel]);
 
   const currentProject = projects.find(p => p.id === selectedProjectId) || null;
 
@@ -233,6 +249,7 @@ export default function App() {
     setCurrentStep(1);
     setSelectedTextForAI("");
     setViewMode("workspace");
+    setSetupMode("landing");
   };
 
   const handleSelectProject = (id: string) => {
@@ -240,6 +257,13 @@ export default function App() {
     setCurrentStep(1);
     setSelectedTextForAI("");
     setViewMode("workspace");
+    
+    const proj = projects.find(p => p.id === id);
+    if (proj && (proj.title || proj.outline || proj.uploadedCriteria)) {
+      setSetupMode("workspace");
+    } else {
+      setSetupMode("landing");
+    }
   };
 
   const handleApplyRefinedText = (refinedText: string) => {
@@ -266,9 +290,11 @@ export default function App() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => setViewMode("workspace")}>
             <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF6B00] to-[#7C3AED] flex items-center justify-center text-white font-black text-sm shadow-sm">
-              S
+              M
             </div>
-            <span className="font-display font-black text-sm tracking-tight text-slate-800">SKKN 2026 <span className="text-[#FF6B00]">PRO</span></span>
+            <span className="font-display font-black text-sm tracking-tight text-slate-800">
+              Viết sáng kiến kinh nghiệm cùng <span className="text-[#FF6B00]">Maris Slide</span> - ZALO: 0396.581.283
+            </span>
           </div>
           
           {currentProject && viewMode === "workspace" && (
@@ -284,21 +310,24 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <a
+            href="https://zalo.me/0396581283"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="py-1.5 px-3.5 rounded-xl border border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <span>Liên hệ tư vấn khóa học & thiết kế: Zalo: 0396.581.283</span>
+          </a>
+
           <button
             onClick={() => setShowSettingsModal(true)}
-            className={`py-1.5 px-3.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-              !apiKey 
-                ? "border-red-200 bg-red-50 text-red-700 hover:bg-red-100" 
-                : "border-slate-200 text-slate-650 hover:text-slate-900 hover:bg-slate-50"
-            }`}
+            className="py-1.5 px-3.5 rounded-xl border border-slate-200 text-slate-650 hover:text-slate-900 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5 shrink-0" />
             <span>Cấu hình AI</span>
-            {!apiKey && (
-              <span className="text-[10px] text-red-500 font-bold ml-1 animate-pulse">
-                (Lấy API key để sử dụng)
-              </span>
-            )}
+            <span className="text-[10px] text-red-500 font-bold ml-1 animate-pulse">
+              (Lấy API key để sử dụng app)
+            </span>
           </button>
 
           <button
@@ -331,34 +360,41 @@ export default function App() {
             />
           </div>
         ) : (
-          <div className="flex-1 flex overflow-hidden">
-            {/* Column 1: Sidebar (Menu dọc 11 bước chuẩn) */}
-            <Sidebar 
-              currentStep={currentStep}
-              onStepChange={setCurrentStep}
+          setupMode === "landing" && currentProject ? (
+            <LandingPage 
               project={currentProject}
-              onNewProject={handleCreateNewProject}
+              onUpdateProject={handleUpdateProject}
+              onProceed={() => setSetupMode("workspace")}
             />
+          ) : (
+            <div className="flex-1 flex overflow-hidden">
+              {/* Column 1: Sidebar (Menu dọc 8 bước chuẩn) */}
+              <Sidebar 
+                currentStep={currentStep}
+                onStepChange={setCurrentStep}
+                project={currentProject}
+                onNewProject={handleCreateNewProject}
+              />
 
-            {/* Column 2: Step-by-step Interactive Workspace */}
-            <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
-              <StepRenderer 
+              {/* Column 2: Step-by-step Interactive Workspace */}
+              <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
+                <StepRenderer 
+                  currentStep={currentStep}
+                  project={currentProject}
+                  onUpdateProject={handleUpdateProject}
+                  onStepChange={setCurrentStep}
+                  onSetSelectedText={setSelectedTextForAI}
+                />
+              </div>
+
+              {/* Column 3: AI Assistant Right Panel */}
+              <AIPanel 
                 currentStep={currentStep}
                 project={currentProject}
                 onUpdateProject={handleUpdateProject}
-                onStepChange={setCurrentStep}
-                onSetSelectedText={setSelectedTextForAI}
               />
             </div>
-
-            {/* Column 3: AI Assistant Right Panel */}
-            <AIPanel 
-              currentStep={currentStep}
-              projectTitle={currentProject?.title || ""}
-              sourceTextForAI={selectedTextForAI}
-              onApplyRefinedText={handleApplyRefinedText}
-            />
-          </div>
+          )
         )}
 
       </div>
@@ -371,7 +407,7 @@ export default function App() {
                 <Settings className="w-5 h-5 text-[#7C3AED] animate-spin-slow" />
                 <h3 className="font-display font-bold text-base text-slate-800">Cấu Hướng Kết Nối Gemini AI</h3>
               </div>
-              {apiKey && (
+              {(apiKey1 || apiKey2 || apiKey3) && (
                 <button
                   onClick={() => setShowSettingsModal(false)}
                   className="text-slate-400 hover:text-slate-650 text-sm font-semibold transition"
@@ -382,20 +418,40 @@ export default function App() {
             </div>
             
             {/* Body */}
-            <div className="p-6 space-y-5 flex-1 overflow-y-auto">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase block">Gemini API Key</label>
-                <div className="relative">
+            <div className="p-6 space-y-4 flex-1 overflow-y-auto">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 uppercase block">Gemini API Key 1</label>
                   <input
                     type="password"
-                    value={modalKeyInput}
-                    onChange={(e) => setModalKeyInput(e.target.value)}
-                    placeholder="Nhập API Key (AI Studio)..."
-                    className="w-full border border-slate-200 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] hover:border-slate-300 transition"
+                    value={modalKey1Input}
+                    onChange={(e) => setModalKey1Input(e.target.value)}
+                    placeholder="Nhập API Key 1 (AI Studio)..."
+                    className="w-full border border-slate-200 rounded-2xl py-2.5 px-4 text-sm focus:outline-none focus:border-[#7C3AED] transition"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 uppercase block">Gemini API Key 2</label>
+                  <input
+                    type="password"
+                    value={modalKey2Input}
+                    onChange={(e) => setModalKey2Input(e.target.value)}
+                    placeholder="Nhập API Key 2 (AI Studio)..."
+                    className="w-full border border-slate-200 rounded-2xl py-2.5 px-4 text-sm focus:outline-none focus:border-[#7C3AED] transition"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 uppercase block">Gemini API Key 3</label>
+                  <input
+                    type="password"
+                    value={modalKey3Input}
+                    onChange={(e) => setModalKey3Input(e.target.value)}
+                    placeholder="Nhập API Key 3 (AI Studio)..."
+                    className="w-full border border-slate-200 rounded-2xl py-2.5 px-4 text-sm focus:outline-none focus:border-[#7C3AED] transition"
                   />
                 </div>
                 <div className="flex items-center justify-between text-[11px] gap-2">
-                  <span className="text-slate-400">API Key được lưu an toàn tại localStorage trình duyệt.</span>
+                  <span className="text-slate-400">Các API Key sẽ luân phiên xoay vòng khi hết quota.</span>
                   <a
                     href="https://aistudio.google.com/api-keys"
                     target="_blank"
@@ -438,7 +494,7 @@ export default function App() {
                 </div>
               </div>
 
-              {!modalKeyInput && (
+              {!(modalKey1Input || modalKey2Input || modalKey3Input) && (
                 <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-2xl flex items-start gap-2.5 text-[11px] text-amber-800 leading-normal">
                   <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                   <p>
@@ -450,7 +506,7 @@ export default function App() {
 
             {/* Footer */}
             <div className="p-4 bg-slate-50 border-t border-slate-150 flex items-center justify-end gap-2.5">
-              {apiKey && (
+              {(apiKey1 || apiKey2 || apiKey3) && (
                 <button
                   onClick={() => setShowSettingsModal(false)}
                   className="py-2.5 px-4 text-xs font-semibold rounded-xl border border-slate-200 text-slate-650 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
@@ -459,7 +515,7 @@ export default function App() {
                 </button>
               )}
               <button
-                onClick={() => handleSaveSettings(modalKeyInput, modalModelInput)}
+                onClick={() => handleSaveSettings(modalKey1Input, modalKey2Input, modalKey3Input, modalModelInput)}
                 className="py-2.5 px-5 text-xs font-bold rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#7C3AED] text-white hover:opacity-90 transition shadow-sm cursor-pointer"
               >
                 Lưu cấu hình
