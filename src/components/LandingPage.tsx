@@ -8,6 +8,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Project } from "../types";
+import { generateOutline } from "../utils/geminiClient";
 
 interface LandingPageProps {
   project: Project;
@@ -61,6 +62,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       
       const data = await response.json();
       
+      // Build criteria text block
+      let ctx = "";
+      if (data.criteriaList && data.criteriaList.length > 0) {
+        ctx += "TIÊU CHÍ ĐÁNH GIÁ:\n";
+        data.criteriaList.forEach((cr: any) => {
+          ctx += `- ${cr.name} (${cr.maxScore} điểm): ${cr.description}\n`;
+        });
+      }
+      if (data.requirements && data.requirements.length > 0) {
+        ctx += "\nYÊU CẦU BẮT BUỘC:\n";
+        data.requirements.forEach((r: any) => { ctx += `- ${r}\n`; });
+      }
+      if (data.focusPoints && data.focusPoints.length > 0) {
+        ctx += "\nTRỌNG TÂM CẦN LƯU Ý:\n";
+        data.focusPoints.forEach((f: any) => { ctx += `- ${f}\n`; });
+      }
+
+      // Automatically generate the outline matched to guidelines
+      const outlineData = await generateOutline({
+        title: project.title || "Sáng kiến kinh nghiệm bám sát mẫu hướng dẫn",
+        subject: project.subject || "Tự chọn",
+        grade: project.grade || "Tự chọn",
+        level: project.level || "Tự chọn",
+        context: project.description || "",
+        criteriaContext: ctx
+      });
+      
       onUpdateProject({
         uploadedCriteria: {
           fileName: data.fileName,
@@ -70,12 +98,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           requirements: data.requirements || [],
           focusPoints: data.focusPoints || [],
           aiSummary: data.aiSummary || ""
+        },
+        outline: {
+          analyticalRating: outlineData.analyticalRating,
+          items: outlineData.outline
         }
       });
       // Proceed straight to the workspace after successful upload
       onProceed();
     } catch (err: any) {
-      setErrorMsg(`Lỗi phân tích file: ${err.message}`);
+      setErrorMsg(`Lỗi phân tích hoặc lập dàn ý: ${err.message}`);
     } finally {
       setUploadLoading(false);
     }
@@ -92,7 +124,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Main Title Section */}
       <div className="text-center mb-8 space-y-2">
         <h1 className="font-display font-black text-3xl tracking-tight text-[#FF6B00]">
-          SKKN 2026 PRO
+          VIẾT SÁNG KIẾN KINH NGHIỆM CÙNG MARIS SLIDE
         </h1>
         <div className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-100/60 uppercase">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
@@ -157,8 +189,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="flex flex-col items-center gap-3 py-3">
                 <RefreshCw className="w-8 h-8 text-[#FF6B00] animate-spin" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">AI đang phân tích tài liệu của Sở...</p>
-                  <p className="text-[10px] text-slate-400 mt-1">Trích xuất cấu trúc & định dạng yêu cầu hành chính</p>
+                  <p className="text-sm font-semibold text-slate-700">AI đang quét tài liệu & lập dàn ý bám sát công văn...</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Hệ thống đang cấu trúc hóa nội dung học thuật</p>
                 </div>
               </div>
             ) : (
@@ -202,7 +234,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* Page Footer */}
       <div className="text-[10px] text-slate-400 font-bold tracking-wider uppercase mt-12 select-none">
-        SKKN 2026 PRO • Trợ lý viết mọi mẫu SKKN các Sở
+        VIẾT SÁNG KIẾN KINH NGHIỆM CÙNG MARIS SLIDE • Trợ lý viết mọi mẫu SKKN các Sở
       </div>
     </div>
   );
