@@ -3,164 +3,14 @@ import {
   Packer,
   Paragraph,
   TextRun,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  ShadingType,
-  BorderStyle,
   AlignmentType,
   HeadingLevel,
   PageBreak,
-  Header,
   Footer,
   PageNumber
 } from "docx";
 import { Project } from "../types";
 
-// Helper: Build Survey Data Table
-const buildSurveyTable = (project: Project): Table => {
-  const tableBorder = { style: BorderStyle.SINGLE, size: 1, color: "000000" };
-  const cellBorders = { top: tableBorder, bottom: tableBorder, left: tableBorder, right: tableBorder };
-  
-  const rows = [
-    new TableRow({
-      tableHeader: true,
-      children: [
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 4000, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Tiêu chí đánh giá khảo sát thực trạng", bold: true, size: 22, font: "Times New Roman" })] })]
-        }),
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 1300, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Đạt (HS)", bold: true, size: 22, font: "Times New Roman" })] })]
-        }),
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 1300, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Tỷ lệ (%)", bold: true, size: 22, font: "Times New Roman" })] })]
-        }),
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 1300, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Chưa Đạt", bold: true, size: 22, font: "Times New Roman" })] })]
-        }),
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 1300, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Tỷ lệ (%)", bold: true, size: 22, font: "Times New Roman" })] })]
-        })
-      ]
-    })
-  ];
-
-  if (project.survey?.surveyRows) {
-    project.survey.surveyRows.forEach(row => {
-      rows.push(new TableRow({
-        children: [
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 4000, type: WidthType.DXA },
-            children: [new Paragraph({ children: [new TextRun({ text: row.criteria, size: 22, font: "Times New Roman" })] })]
-          }),
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 1300, type: WidthType.DXA },
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.achievedCount), size: 22, font: "Times New Roman" })] })]
-          }),
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 1300, type: WidthType.DXA },
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${row.achievedRate.toFixed(1)}%`, size: 22, font: "Times New Roman" })] })]
-          }),
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 1300, type: WidthType.DXA },
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.notAchievedCount), size: 22, font: "Times New Roman" })] })]
-          }),
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 1300, type: WidthType.DXA },
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${row.notAchievedRate.toFixed(1)}%`, size: 22, font: "Times New Roman" })] })]
-          })
-        ]
-      }));
-    });
-  }
-
-  return new Table({
-    columnWidths: [4000, 1300, 1300, 1300, 1300],
-    rows
-  });
-};
-
-// Helper: Build Experiment pedagogical comparison Table
-const buildExperimentTable = (project: Project): Table => {
-  const tableBorder = { style: BorderStyle.SINGLE, size: 1, color: "000000" };
-  const cellBorders = { top: tableBorder, bottom: tableBorder, left: tableBorder, right: tableBorder };
-  
-  const rows = [
-    new TableRow({
-      tableHeader: true,
-      children: [
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 4600, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Phân loại mức độ hoàn thành", bold: true, size: 22, font: "Times New Roman" })] })]
-        }),
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 2300, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Nhóm Đối Chứng (HS)", bold: true, size: 22, font: "Times New Roman" })] })]
-        }),
-        new TableCell({
-          borders: cellBorders,
-          width: { size: 2300, type: WidthType.DXA },
-          shading: { fill: "E6E6E6", type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Nhóm Thực Nghiệm (HS)", bold: true, size: 22, font: "Times New Roman" })] })]
-        })
-      ]
-    })
-  ];
-
-  if (project.experiment?.comparisonData) {
-    project.experiment.comparisonData.forEach(row => {
-      rows.push(new TableRow({
-        children: [
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 4600, type: WidthType.DXA },
-            children: [new Paragraph({ children: [new TextRun({ text: row.category, size: 22, font: "Times New Roman" })] })]
-          }),
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 2300, type: WidthType.DXA },
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.controlGroup), size: 22, font: "Times New Roman" })] })]
-          }),
-          new TableCell({
-            borders: cellBorders,
-            width: { size: 2300, type: WidthType.DXA },
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.experimentalGroup), size: 22, font: "Times New Roman" })] })]
-          })
-        ]
-      }));
-    });
-  }
-
-  return new Table({
-    columnWidths: [4600, 2300, 2300],
-    rows
-  });
-};
 
 // Main Export Function
 export const exportToDocx = async (project: Project) => {
@@ -252,9 +102,33 @@ export const exportToDocx = async (project: Project) => {
   );
 
   // --- 2. REPORT CONTENT parsing ---
-  const lines = (project.textEditorContent || "").split("\n");
-  let surveyTableInserted = false;
-  let experimentTableInserted = false;
+  let combinedContent = "";
+  if (project.contentPart1And2) {
+    combinedContent += "PHẦN I: ĐẶT VẤN ĐỀ & PHẦN II: CƠ SỞ LÝ LUẬN\n" + project.contentPart1And2 + "\n\n";
+  }
+  if (project.contentPart3) {
+    combinedContent += "PHẦN III: THỰC TRẠNG VẤN ĐỀ\n" + project.contentPart3 + "\n\n";
+  }
+  if (project.contentSolution1) {
+    combinedContent += "PHẦN IV: CÁC BIỆN PHÁP THỰC HIỆN CỐT LÕI\n";
+    combinedContent += "Biện pháp 1\n" + project.contentSolution1 + "\n\n";
+  }
+  if (project.contentSolution2) {
+    combinedContent += "Biện pháp 2\n" + project.contentSolution2 + "\n\n";
+  }
+  if (project.contentSolution3) {
+    combinedContent += "Biện pháp 3\n" + project.contentSolution3 + "\n\n";
+  }
+  if (project.contentConclusion) {
+    combinedContent += "PHẦN V: HIỆU QUẢ, KẾT LUẬN & KHUYẾN NGHỊ\n" + project.contentConclusion + "\n\n";
+  }
+
+  // Fallback to legacy field if no sections content
+  if (!combinedContent.trim() && project.textEditorContent) {
+    combinedContent = project.textEditorContent;
+  }
+
+  const lines = combinedContent.split("\n");
 
   lines.forEach((line) => {
     const trimmed = line.trim();
@@ -310,24 +184,6 @@ export const exportToDocx = async (project: Project) => {
       );
     }
 
-    // Intelligent insertion of tables based on text content
-    if (!surveyTableInserted && (trimmed.toLowerCase().includes("cơ sở thực tiễn") || trimmed.toLowerCase().includes("khảo sát thực trạng"))) {
-      sectionChildren.push(
-        new Paragraph({ spacing: { before: 180, after: 120 }, children: [new TextRun({ text: "Bảng 1.1: Khảo sát thực trạng ban đầu của đối tượng học sinh trước tác động:", bold: true, italic: true, size: 22, font: "Times New Roman" })] }),
-        buildSurveyTable(project),
-        new Paragraph({ spacing: { before: 120, after: 120 } })
-      );
-      surveyTableInserted = true;
-    }
-
-    if (!experimentTableInserted && (trimmed.toLowerCase().includes("thực nghiệm sư phạm") || trimmed.toLowerCase().includes("kết quả thực nghiệm"))) {
-      sectionChildren.push(
-        new Paragraph({ spacing: { before: 180, after: 120 }, children: [new TextRun({ text: "Bảng 2.1: Đối sánh kết quả học tập giữa nhóm Đối chứng và nhóm Thực nghiệm:", bold: true, italic: true, size: 22, font: "Times New Roman" })] }),
-        buildExperimentTable(project),
-        new Paragraph({ spacing: { before: 120, after: 120 } })
-      );
-      experimentTableInserted = true;
-    }
   });
 
   // --- 3. ANNEXES & BIBLIOGRAPHY ---
@@ -355,38 +211,6 @@ export const exportToDocx = async (project: Project) => {
         })
       );
     });
-  }
-
-  // --- 4. FALLBACK TABLE INSERTS ---
-  // Append tables at the very end if they were not triggered by text content keywords
-  if (!surveyTableInserted || !experimentTableInserted) {
-    sectionChildren.push(
-      new Paragraph({ children: [new PageBreak()] }),
-      new Paragraph({
-        heading: HeadingLevel.HEADING_1,
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 360, after: 180 },
-        children: [
-          new TextRun({ text: "PHỤ LỤC BẢNG BIỂU SỐ LIỆU", bold: true, size: 30, font: "Times New Roman" })
-        ]
-      })
-    );
-
-    if (!surveyTableInserted) {
-      sectionChildren.push(
-        new Paragraph({ spacing: { before: 180, after: 120 }, children: [new TextRun({ text: "Bảng 1.1: Khảo sát thực trạng ban đầu của đối tượng học sinh trước tác động:", bold: true, italic: true, size: 22, font: "Times New Roman" })] }),
-        buildSurveyTable(project),
-        new Paragraph({ spacing: { before: 120, after: 120 } })
-      );
-    }
-
-    if (!experimentTableInserted) {
-      sectionChildren.push(
-        new Paragraph({ spacing: { before: 180, after: 120 }, children: [new TextRun({ text: "Bảng 2.1: Đối sánh kết quả học tập giữa nhóm Đối chứng và nhóm Thực nghiệm:", bold: true, italic: true, size: 22, font: "Times New Roman" })] }),
-        buildExperimentTable(project),
-        new Paragraph({ spacing: { before: 120, after: 120 } })
-      );
-    }
   }
 
   // Define Document structure
