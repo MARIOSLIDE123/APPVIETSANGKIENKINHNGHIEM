@@ -172,21 +172,13 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [selectedTextForAI, setSelectedTextForAI] = useState<string>("");
   const [viewMode, setViewMode] = useState<"catalog" | "workspace">("workspace");
-  const [setupMode, setSetupMode] = useState<"landing" | "workspace">("workspace");
+  const [setupMode, setSetupMode] = useState<"landing" | "workspace">("landing");
 
   const [apiKey1, setApiKey1] = useState<string>(() => localStorage.getItem("gemini_api_key_1") || "");
   const [apiKey2, setApiKey2] = useState<string>(() => localStorage.getItem("gemini_api_key_2") || "");
   const [apiKey3, setApiKey3] = useState<string>(() => localStorage.getItem("gemini_api_key_3") || "");
   const [selectedModel, setSelectedModel] = useState<string>(() => localStorage.getItem("gemini_selected_model") || "gemini-3-pro-preview");
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
-
-  // Pre-seed default authorized users if not initialized
-  useEffect(() => {
-    const stored = localStorage.getItem("maris_authorized_users");
-    if (!stored) {
-      localStorage.setItem("maris_authorized_users", JSON.stringify(["giaovien@gmail.com", "thayco@gmail.com"]));
-    }
-  }, []);
 
   useEffect(() => {
     if (!currentUser) return;
