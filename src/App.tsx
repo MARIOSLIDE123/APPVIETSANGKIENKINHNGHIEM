@@ -4,10 +4,8 @@ import { StepRenderer } from "./components/StepRenderer";
 import { AIPanel } from "./components/AIPanel";
 import { ProjectManager } from "./components/ProjectManager";
 import { LandingPage } from "./components/LandingPage";
-import { Login } from "./components/Login";
-import { AdminPanel } from "./components/AdminPanel";
 import { Project } from "./types";
-import { BookOpen, FolderGit2, Sparkles, AlertCircle, Settings, ExternalLink, LogOut, ShieldAlert } from "lucide-react";
+import { BookOpen, FolderGit2, Sparkles, AlertCircle, Settings, ExternalLink } from "lucide-react";
 import { AVAILABLE_MODELS } from "./utils/geminiClient";
 
 // Pre-seeded high-quality Vietnamese pedagogical prototypes to allow instant use & evaluation
@@ -165,8 +163,6 @@ const INITIAL_DEMO_PROJECTS: Project[] = [
 ];
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<string | null>(() => localStorage.getItem("maris_current_user"));
-  const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>(INITIAL_DEMO_PROJECTS);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>("reversed-learning-tint-4");
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -181,7 +177,6 @@ export default function App() {
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!currentUser) return;
     const hasKeys = localStorage.getItem("gemini_api_key_1") || 
                     localStorage.getItem("gemini_api_key_2") || 
                     localStorage.getItem("gemini_api_key_3") || 
@@ -189,18 +184,7 @@ export default function App() {
     if (!hasKeys) {
       setShowSettingsModal(true);
     }
-  }, [currentUser]);
-
-  const handleLoginSuccess = (email: string) => {
-    localStorage.setItem("maris_current_user", email);
-    setCurrentUser(email);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("maris_current_user");
-    setCurrentUser(null);
-    setShowAdminPanel(false);
-  };
+  }, []);
 
   const handleSaveSettings = (key1: string, key2: string, key3: string, model: string) => {
     localStorage.setItem("gemini_api_key_1", key1);
@@ -298,10 +282,6 @@ export default function App() {
     }
   };
 
-  if (!currentUser) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-800 antialiased selection:bg-purple-200 selection:text-purple-900">
       
@@ -340,16 +320,6 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          {currentUser === "marioslide.animation@gmail.com" && (
-            <button
-              onClick={() => setShowAdminPanel(true)}
-              className="py-1.5 px-3.5 rounded-xl border border-slate-200 text-slate-650 hover:text-slate-900 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <ShieldAlert className="w-3.5 h-3.5 text-[#7C3AED]" />
-              <span>Quản trị User</span>
-            </button>
-          )}
-
           <button
             onClick={() => setShowSettingsModal(true)}
             className="py-1.5 px-3.5 rounded-xl border border-slate-200 text-slate-650 hover:text-slate-900 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
@@ -374,14 +344,6 @@ export default function App() {
             className="py-1.5 px-4 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold text-xs transition shadow-sm cursor-pointer"
           >
             + Khởi tạo mới
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-red-500 hover:bg-red-50 transition cursor-pointer flex items-center justify-center shrink-0"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
@@ -562,9 +524,6 @@ export default function App() {
             </div>
           </div>
         </div>
-      )}
-      {showAdminPanel && (
-        <AdminPanel onClose={() => setShowAdminPanel(false)} />
       )}
     </div>
   );
