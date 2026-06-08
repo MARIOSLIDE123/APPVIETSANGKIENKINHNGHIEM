@@ -294,7 +294,7 @@ export default function App() {
             </div>
             <div className="flex flex-col select-none">
               <span className="font-display font-black text-sm tracking-tight text-slate-800 leading-tight">
-                <span className="text-[#FF6B00]">SKKN 2026 PRO</span>
+                <span className="text-[#FF6B00]">VIẾT SÁNG KIẾN KINH NGHIỆM CÙNG MARIS SLIDE</span>
               </span>
               <a 
                 href="https://zalo.me/0396581283" 
