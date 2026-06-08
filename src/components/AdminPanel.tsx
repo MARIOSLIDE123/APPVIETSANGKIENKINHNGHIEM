@@ -20,10 +20,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           const data = await response.json();
           setUsers(data);
         } else {
-          setError("Không thể tải danh sách tài khoản từ máy chủ.");
+          setError(`Không thể tải danh sách tài khoản từ máy chủ (Mã lỗi HTTP: ${response.status}). Vui lòng đảm bảo server đang chạy.`);
         }
       } catch (err) {
-        setError("Lỗi kết nối máy chủ khi tải danh sách tài khoản.");
+        setError("Lỗi kết nối máy chủ khi tải danh sách tài khoản. Hãy chắc chắn Express server đang chạy trên cổng 3000.");
       }
     };
     fetchUsers();
@@ -60,8 +60,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Không thể cấp quyền cho email này.");
+        let errMsg = "Không thể cấp quyền cho email này.";
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) errMsg = errData.error;
+        } catch (_) {
+          errMsg = `Không thể kết nối đến máy chủ hoặc máy chủ trả về lỗi (HTTP status ${response.status}).`;
+        }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
@@ -85,8 +91,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Không thể thu hồi quyền của email này.");
+        let errMsg = "Không thể thu hồi quyền của email này.";
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) errMsg = errData.error;
+        } catch (_) {
+          errMsg = `Không thể kết nối đến máy chủ hoặc máy chủ trả về lỗi (HTTP status ${response.status}).`;
+        }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
