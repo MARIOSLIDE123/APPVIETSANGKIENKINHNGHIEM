@@ -607,7 +607,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 SKKN 2026 PRO server running at http://0.0.0.0:${PORT}`);
+    console.log(`🚀 VIẾT SÁNG KIẾN KINH NGHIỆM CÙNG MARIS SLIDE server running at http://0.0.0.0:${PORT}`);
   });
 }
 
