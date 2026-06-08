@@ -74,7 +74,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             Đăng Nhập Hệ Thống
           </h2>
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Hệ thống viết sáng kiến kinh nghiệm SKKN 2026 PRO
+            Hệ thống viết sáng kiến kinh nghiệm cùng Maris Slide
           </p>
         </div>
 
