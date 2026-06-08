@@ -1,5 +1,5 @@
 {
-  "name": "SKKN 2026 PRO",
+  "name": "VIẾT SÁNG KIẾN KINH NGHIỆM CÙNG MARIS SLIDE",
   "description": "Hệ thống hỗ trợ viết Sáng kiến kinh nghiệm và Nghiên cứu khoa học sư phạm ứng dụng chuyên nghiệp 2026, tích hợp trí tuệ nhân tạo.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
