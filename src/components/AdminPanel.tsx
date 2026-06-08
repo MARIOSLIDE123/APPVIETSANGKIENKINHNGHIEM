@@ -11,20 +11,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Load users from localStorage on mount
+  // Load users from server on mount
   useEffect(() => {
-    const stored = localStorage.getItem("maris_authorized_users");
-    if (stored) {
-      setUsers(JSON.parse(stored));
-    }
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("/api/admin/users");
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data);
+        } else {
+          setError("Không thể tải danh sách tài khoản từ máy chủ.");
+        }
+      } catch (err) {
+        setError("Lỗi kết nối máy chủ khi tải danh sách tài khoản.");
+      }
+    };
+    fetchUsers();
   }, []);
 
-  const saveUsers = (updatedUsers: string[]) => {
-    localStorage.setItem("maris_authorized_users", JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
-  };
-
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -47,23 +52,49 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       return;
     }
 
-    if (users.includes(email)) {
-      setError("Email này đã được cấp quyền truy cập từ trước!");
-      return;
-    }
+    try {
+      const response = await fetch("/api/admin/users/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
 
-    const updated = [...users, email];
-    saveUsers(updated);
-    setEmailInput("");
-    setSuccess(`Đã cấp quyền thành công cho email: ${email}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Không thể cấp quyền cho email này.");
+      }
+
+      const data = await response.json();
+      setUsers(data.users);
+      setEmailInput("");
+      setSuccess(`Đã cấp quyền thành công cho email: ${email}`);
+    } catch (err: any) {
+      setError(err.message || "Lỗi kết nối máy chủ khi cấp quyền.");
+    }
   };
 
-  const handleRemoveUser = (emailToRemove: string) => {
+  const handleRemoveUser = async (emailToRemove: string) => {
     setError("");
     setSuccess("");
-    const updated = users.filter(u => u !== emailToRemove);
-    saveUsers(updated);
-    setSuccess(`Đã thu hồi quyền truy cập của email: ${emailToRemove}`);
+
+    try {
+      const response = await fetch("/api/admin/users/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailToRemove })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Không thể thu hồi quyền của email này.");
+      }
+
+      const data = await response.json();
+      setUsers(data.users);
+      setSuccess(`Đã thu hồi quyền truy cập của email: ${emailToRemove}`);
+    } catch (err: any) {
+      setError(err.message || "Lỗi kết nối máy chủ khi thu hồi quyền.");
+    }
   };
 
   return (
