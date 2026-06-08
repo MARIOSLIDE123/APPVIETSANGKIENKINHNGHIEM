@@ -493,6 +493,101 @@ Trả về JSON định dạng chính xác sau:
     res.status(500).json({ error: error.message || "Lỗi tạo cấu trúc slide." });
   }
 });
+const USERS_FILE_PATH = path.join(process.cwd(), "users.json");
+
+// Helper to load authorized users
+const loadUsers = (): string[] => {
+  try {
+    if (!fs.existsSync(USERS_FILE_PATH)) {
+      const defaultUsers = ["giaovien@gmail.com", "thayco@gmail.com"];
+      fs.writeFileSync(USERS_FILE_PATH, JSON.stringify(defaultUsers, null, 2));
+      return defaultUsers;
+    }
+    const data = fs.readFileSync(USERS_FILE_PATH, "utf-8");
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error reading users.json:", error);
+    return [];
+  }
+};
+
+// Helper to save authorized users
+const saveUsers = (users: string[]) => {
+  try {
+    fs.writeFileSync(USERS_FILE_PATH, JSON.stringify(users, null, 2));
+  } catch (error) {
+    console.error("Error writing users.json:", error);
+  }
+};
+
+// 9. API: Login endpoint
+app.post("/api/auth/login", (req, res) => {
+  const { email, password } = req.body;
+  const trimmedEmail = (email || "").trim().toLowerCase();
+  const trimmedPassword = (password || "").trim();
+
+  if (!trimmedEmail || !trimmedPassword) {
+    return res.status(400).json({ error: "Vui lòng nhập đầy đủ email và mật khẩu!" });
+  }
+
+  // Admin Verification
+  if (trimmedEmail === "marioslide.animation@gmail.com" && trimmedPassword === "MARIS2026") {
+    return res.json({ success: true, email: trimmedEmail, role: "admin" });
+  }
+
+  // Standard User Verification
+  const users = loadUsers();
+  if (users.map(u => u.toLowerCase()).includes(trimmedEmail) && trimmedPassword === "MARIS2026") {
+    return res.json({ success: true, email: trimmedEmail, role: "user" });
+  }
+
+  return res.status(401).json({ error: "Tài khoản hoặc mật khẩu không chính xác, hoặc chưa được cấp quyền truy cập. Vui lòng liên hệ Maris Slide để được cấp tài khoản." });
+});
+
+// 10. API: Get authorized users list (Admin only)
+app.get("/api/admin/users", (req, res) => {
+  const users = loadUsers();
+  res.json(users);
+});
+
+// 11. API: Add authorized email
+app.post("/api/admin/users/add", (req, res) => {
+  const { email } = req.body;
+  const trimmedEmail = (email || "").trim().toLowerCase();
+
+  if (!trimmedEmail) {
+    return res.status(400).json({ error: "Vui lòng cung cấp email cần cấp phép!" });
+  }
+
+  const users = loadUsers();
+  if (users.includes(trimmedEmail)) {
+    return res.status(400).json({ error: "Email này đã được cấp quyền truy cập từ trước!" });
+  }
+
+  if (trimmedEmail === "marioslide.animation@gmail.com") {
+    return res.status(400).json({ error: "Email này là tài khoản quản trị tối cao, không cần cấp phép thêm!" });
+  }
+
+  const updated = [...users, trimmedEmail];
+  saveUsers(updated);
+  res.json({ success: true, users: updated });
+});
+
+// 12. API: Remove authorized email
+app.post("/api/admin/users/remove", (req, res) => {
+  const { email } = req.body;
+  const trimmedEmail = (email || "").trim().toLowerCase();
+
+  if (!trimmedEmail) {
+    return res.status(400).json({ error: "Vui lòng cung cấp email cần thu hồi!" });
+  }
+
+  const users = loadUsers();
+  const updated = users.filter(u => u !== trimmedEmail);
+  saveUsers(updated);
+  res.json({ success: true, users: updated });
+});
+
 
 
 async function startServer() {
