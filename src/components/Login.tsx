@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Lock, Mail, AlertCircle, Sparkles } from "lucide-react";
+import { Lock, Mail, AlertCircle, Sparkles, RefreshCw } from "lucide-react";
 
 interface LoginProps {
   onLoginSuccess: (email: string) => void;
@@ -9,8 +9,9 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -27,22 +28,26 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // 1. Admin login verification
-    if (trimmedEmail === "marioslide.animation@gmail.com" && trimmedPassword === "MARIS2026") {
-      onLoginSuccess(trimmedEmail);
-      return;
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Tài khoản hoặc mật khẩu không chính xác.");
+      }
+
+      const data = await response.json();
+      onLoginSuccess(data.email);
+    } catch (err: any) {
+      setError(err.message || "Không thể kết nối đến máy chủ xác thực.");
+    } finally {
+      setLoading(false);
     }
-
-    // 2. Standard user login verification
-    const storedUsers = localStorage.getItem("maris_authorized_users");
-    const authorizedUsersList: string[] = storedUsers ? JSON.parse(storedUsers) : [];
-
-    if (authorizedUsersList.map(u => u.toLowerCase()).includes(trimmedEmail) && trimmedPassword === "MARIS2026") {
-      onLoginSuccess(trimmedEmail);
-      return;
-    }
-
-    setError("Tài khoản hoặc mật khẩu không chính xác, hoặc bạn chưa được cấp quyền truy cập. Vui lòng liên hệ Maris Slide để được kích hoạt tài khoản.");
   };
 
   return (
@@ -107,10 +112,15 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
           <button
             type="submit"
-            className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#7C3AED] hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-purple-500/10 flex items-center justify-center gap-2 transition cursor-pointer mt-6"
+            disabled={loading}
+            className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#7C3AED] hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-purple-500/10 flex items-center justify-center gap-2 transition cursor-pointer mt-6 disabled:opacity-50"
           >
-            <Sparkles className="w-4 h-4 text-white" />
-            <span>Vào ứng dụng</span>
+            {loading ? (
+              <RefreshCw className="w-4 h-4 text-white animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 text-white" />
+            )}
+            <span>{loading ? "Đang đăng nhập..." : "Vào ứng dụng"}</span>
           </button>
         </form>
 
