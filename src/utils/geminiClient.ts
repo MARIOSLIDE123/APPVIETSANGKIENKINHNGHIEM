@@ -9,12 +9,35 @@ export const AVAILABLE_MODELS = [
   { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Bản chính thức ổn định, hành văn lưu loát và tối ưu." }
 ];
 
+export const safeGetItem = (key: string, defaultValue = ""): string => {
+  try {
+    return localStorage.getItem(key) || defaultValue;
+  } catch (_) {
+    return defaultValue;
+  }
+};
+
+export const safeSetItem = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (_) {}
+};
+
+export const getApiKeys = (): string[] => {
+  const k1 = safeGetItem("gemini_api_key_1");
+  const k2 = safeGetItem("gemini_api_key_2");
+  const k3 = safeGetItem("gemini_api_key_3");
+  const oldKey = safeGetItem("gemini_api_key");
+  const keys = [k1, k2, k3, oldKey].map(k => k.trim()).filter(Boolean);
+  return Array.from(new Set(keys));
+};
+
 export const getApiKey = (): string => {
-  return localStorage.getItem("gemini_api_key") || "";
+  return getApiKeys()[0] || "";
 };
 
 export const getSelectedModel = (): string => {
-  return localStorage.getItem("gemini_selected_model") || "gemini-3-flash-preview";
+  return safeGetItem("gemini_selected_model", "gemini-3-pro-preview");
 };
 
 let aiInstance: any = null;
@@ -26,10 +49,10 @@ const getAiInstance = (apiKey: string) => {
   return aiInstance;
 };
 
-// Retry and fallback model wrapper
+// Retry and fallback model + API key wrapper
 const executeWithFallback = async (prompt: string, responseJson = true): Promise<any> => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
+  const apiKeys = getApiKeys();
+  if (apiKeys.length === 0) {
     throw new Error("API Key chưa được thiết lập. Vui lòng thiết lập ở góc trên bên phải.");
   }
 
@@ -38,47 +61,48 @@ const executeWithFallback = async (prompt: string, responseJson = true): Promise
     userModel,
     "gemini-3-flash-preview",
     "gemini-3-pro-preview",
-    "gemini-2.5-flash",
-    "gemini-1.5-flash"
+    "gemini-2.5-flash"
   ];
   
   // Keep unique models in order
   const uniqueModels = Array.from(new Set(fallbackModels));
   let lastError: any = null;
-  const ai = getAiInstance(apiKey);
 
-  for (const model of uniqueModels) {
-    try {
-      console.log(`🤖 [Gemini Client] Đang gọi model: ${model}`);
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: prompt,
-        config: {
-          systemInstruction: SYSTEM_PEDAGOGICAL_PROMPT,
-          responseMimeType: responseJson ? "application/json" : undefined,
+  for (const apiKey of apiKeys) {
+    const ai = getAiInstance(apiKey);
+    for (const model of uniqueModels) {
+      try {
+        console.log(`🤖 [Gemini Client] Đang gọi model: ${model} bằng API Key: ...${apiKey.slice(-5)}`);
+        const response = await ai.models.generateContent({
+          model: model,
+          contents: prompt,
+          config: {
+            systemInstruction: SYSTEM_PEDAGOGICAL_PROMPT,
+            responseMimeType: responseJson ? "application/json" : undefined,
+          }
+        });
+        
+        const text = response.text || "";
+        if (responseJson) {
+          // Strip code block markers if any exist
+          let cleaned = text.trim();
+          if (cleaned.startsWith("```json")) {
+            cleaned = cleaned.substring(7, cleaned.length - 3).trim();
+          } else if (cleaned.startsWith("```")) {
+            cleaned = cleaned.substring(3, cleaned.length - 3).trim();
+          }
+          return JSON.parse(cleaned);
         }
-      });
-      
-      const text = response.text || "";
-      if (responseJson) {
-        // Strip code block markers if any exist
-        let cleaned = text.trim();
-        if (cleaned.startsWith("```json")) {
-          cleaned = cleaned.substring(7, cleaned.length - 3).trim();
-        } else if (cleaned.startsWith("```")) {
-          cleaned = cleaned.substring(3, cleaned.length - 3).trim();
-        }
-        return JSON.parse(cleaned);
+        return text;
+      } catch (err: any) {
+        console.warn(`⚠️ [Gemini Client] Model ${model} với Key ...${apiKey.slice(-5)} gặp lỗi:`, err);
+        lastError = err;
+        // Continue loop for fallback
       }
-      return text;
-    } catch (err: any) {
-      console.warn(`⚠️ [Gemini Client] Model ${model} gặp lỗi:`, err);
-      lastError = err;
-      // Continue loop for fallback
     }
   }
 
-  throw lastError || new Error("Tất cả các model Gemini đều thất bại.");
+  throw lastError || new Error("Tất cả các API Key và Model Gemini đều thất bại.");
 };
 
 // 1. Generate Outline (Step 1 -> Step 2)
