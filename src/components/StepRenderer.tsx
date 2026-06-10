@@ -28,7 +28,8 @@ import {
 import { Project, OutlineItem } from "../types";
 import {
   generateOutline,
-  refineText
+  refineText,
+  safeGetItem
 } from "../utils/geminiClient";
 import { exportToDocx } from "../utils/docxGenerator";
 
@@ -281,10 +282,10 @@ Thông tin đề tài:
   };
 
   const hasAnyKey = !!(
-    localStorage.getItem("gemini_api_key_1") ||
-    localStorage.getItem("gemini_api_key_2") ||
-    localStorage.getItem("gemini_api_key_3") ||
-    localStorage.getItem("gemini_api_key")
+    safeGetItem("gemini_api_key_1") ||
+    safeGetItem("gemini_api_key_2") ||
+    safeGetItem("gemini_api_key_3") ||
+    safeGetItem("gemini_api_key")
   );
 
   return (
