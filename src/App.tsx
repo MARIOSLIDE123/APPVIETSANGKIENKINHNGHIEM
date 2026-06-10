@@ -6,7 +6,7 @@ import { ProjectManager } from "./components/ProjectManager";
 import { LandingPage } from "./components/LandingPage";
 import { Project } from "./types";
 import { BookOpen, FolderGit2, Sparkles, AlertCircle, Settings, ExternalLink } from "lucide-react";
-import { AVAILABLE_MODELS } from "./utils/geminiClient";
+import { AVAILABLE_MODELS, safeGetItem, safeSetItem } from "./utils/geminiClient";
 
 // Pre-seeded high-quality Vietnamese pedagogical prototypes to allow instant use & evaluation
 const INITIAL_DEMO_PROJECTS: Project[] = [
@@ -170,27 +170,27 @@ export default function App() {
   const [viewMode, setViewMode] = useState<"catalog" | "workspace">("workspace");
   const [setupMode, setSetupMode] = useState<"landing" | "workspace">("landing");
 
-  const [apiKey1, setApiKey1] = useState<string>(() => localStorage.getItem("gemini_api_key_1") || "");
-  const [apiKey2, setApiKey2] = useState<string>(() => localStorage.getItem("gemini_api_key_2") || "");
-  const [apiKey3, setApiKey3] = useState<string>(() => localStorage.getItem("gemini_api_key_3") || "");
-  const [selectedModel, setSelectedModel] = useState<string>(() => localStorage.getItem("gemini_selected_model") || "gemini-3-pro-preview");
+  const [apiKey1, setApiKey1] = useState<string>(() => safeGetItem("gemini_api_key_1"));
+  const [apiKey2, setApiKey2] = useState<string>(() => safeGetItem("gemini_api_key_2"));
+  const [apiKey3, setApiKey3] = useState<string>(() => safeGetItem("gemini_api_key_3"));
+  const [selectedModel, setSelectedModel] = useState<string>(() => safeGetItem("gemini_selected_model", "gemini-3-pro-preview"));
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
 
   useEffect(() => {
-    const hasKeys = localStorage.getItem("gemini_api_key_1") || 
-                    localStorage.getItem("gemini_api_key_2") || 
-                    localStorage.getItem("gemini_api_key_3") || 
-                    localStorage.getItem("gemini_api_key");
+    const hasKeys = safeGetItem("gemini_api_key_1") || 
+                    safeGetItem("gemini_api_key_2") || 
+                    safeGetItem("gemini_api_key_3") || 
+                    safeGetItem("gemini_api_key");
     if (!hasKeys) {
       setShowSettingsModal(true);
     }
   }, []);
 
   const handleSaveSettings = (key1: string, key2: string, key3: string, model: string) => {
-    localStorage.setItem("gemini_api_key_1", key1);
-    localStorage.setItem("gemini_api_key_2", key2);
-    localStorage.setItem("gemini_api_key_3", key3);
-    localStorage.setItem("gemini_selected_model", model);
+    safeSetItem("gemini_api_key_1", key1);
+    safeSetItem("gemini_api_key_2", key2);
+    safeSetItem("gemini_api_key_3", key3);
+    safeSetItem("gemini_selected_model", model);
     setApiKey1(key1);
     setApiKey2(key2);
     setApiKey3(key3);
