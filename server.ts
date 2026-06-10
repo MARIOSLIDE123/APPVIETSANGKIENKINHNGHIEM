@@ -5,6 +5,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import multer from "multer";
 import fs from "fs";
+import os from "os";
 
 dotenv.config();
 
@@ -13,9 +14,9 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Configure multer for file uploads
+// Configure multer for file uploads in a serverless-safe tmp folder
 const upload = multer({
-  dest: path.join(process.cwd(), "uploads"),
+  dest: path.join(os.tmpdir(), "uploads"),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     const allowed = [
@@ -611,4 +612,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
