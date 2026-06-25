@@ -72,7 +72,8 @@ app.post("/api/upload-criteria", upload.single("file"), async (req, res) => {
 
     try {
       if (mimeType === "application/pdf" || extension === ".pdf") {
-        const pdfParse = (await import("pdf-parse")).default;
+        const pdfParseModule = await import("pdf-parse");
+        const pdfParse = typeof pdfParseModule === "function" ? pdfParseModule : (pdfParseModule.default || pdfParseModule);
         const dataBuffer = fs.readFileSync(filePath);
         const pdfData = await pdfParse(dataBuffer);
         extractedText = pdfData.text;
@@ -82,7 +83,8 @@ app.post("/api/upload-criteria", upload.single("file"), async (req, res) => {
         return res.status(400).json({ error: "Định dạng Word (.doc) cũ không được hỗ trợ để quét tự động. Vui lòng mở file bằng Word, lưu dưới dạng (.docx) hoặc xuất ra file PDF rồi tải lại!" });
       } else {
         // .docx
-        const mammoth = await import("mammoth");
+        const mammothModule = await import("mammoth");
+        const mammoth = mammothModule.default || mammothModule;
         const result = await mammoth.extractRawText({ path: filePath });
         extractedText = result.value;
       }
