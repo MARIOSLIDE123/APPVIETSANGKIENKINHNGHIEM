@@ -282,6 +282,13 @@ export default function App() {
     }
   };
 
+  const isApiKeyActive = !!(
+    (apiKey1 || "").trim() ||
+    (apiKey2 || "").trim() ||
+    (apiKey3 || "").trim() ||
+    safeGetItem("gemini_api_key", "").trim()
+  );
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-800 antialiased selection:bg-purple-200 selection:text-purple-900">
       
@@ -322,13 +329,32 @@ export default function App() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowSettingsModal(true)}
-            className="py-1.5 px-3.5 rounded-xl border border-slate-200 text-slate-650 hover:text-slate-900 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            className="py-1.5 px-3.5 rounded-xl border border-slate-200 text-slate-650 hover:text-slate-900 hover:bg-slate-50 text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
           >
+            <span className="relative flex h-2 w-2 mr-0.5">
+              {isApiKeyActive ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </>
+              ) : (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                </>
+              )}
+            </span>
             <Settings className="w-3.5 h-3.5 shrink-0" />
             <span>Cấu hình AI</span>
-            <span className="text-[10px] text-red-500 font-bold ml-1 animate-pulse">
-              (Lấy API key để sử dụng app)
-            </span>
+            {isApiKeyActive ? (
+              <span className="text-[10px] text-emerald-600 font-bold ml-0.5">
+                (Đang hoạt động)
+              </span>
+            ) : (
+              <span className="text-[10px] text-rose-500 font-bold ml-0.5 animate-pulse">
+                (Chưa cấu hình)
+              </span>
+            )}
           </button>
 
           <button
