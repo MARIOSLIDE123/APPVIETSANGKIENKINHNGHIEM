@@ -337,7 +337,7 @@ Yêu cầu trả về JSON chính xác theo dạng sau:
   }
 });
 
-// 5. API: Text Helper (Write continue, polish, summarize, Vietnamese professional tone)
+// 5. API: Text Helper (Write continue, polish, simplify, Vietnamese professional tone)
 app.post("/api/gemini/refine-text", async (req, res) => {
   try {
     const { text, action, criteriaContext } = req.body;
@@ -508,11 +508,8 @@ Trả về JSON định dạng chính xác sau:
   }
 });
 
+
 // Starting the server
-
-
-
-
 async function startServer() {
   // Serve React build in production, or mount Vite dev server in development
   if (process.env.NODE_ENV !== "production") {
