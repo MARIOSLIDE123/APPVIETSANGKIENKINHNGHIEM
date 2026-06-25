@@ -19,15 +19,19 @@ const upload = multer({
   dest: path.join(os.tmpdir(), "uploads"),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    const allowed = [
+    const allowedMimeTypes = [
       "application/pdf",
       "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain"
     ];
-    if (allowed.includes(file.mimetype)) {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const isAllowedExt = [".pdf", ".doc", ".docx", ".txt"].includes(extension);
+
+    if (allowedMimeTypes.includes(file.mimetype) || isAllowedExt) {
       cb(null, true);
     } else {
-      cb(new Error("Chỉ hỗ trợ file PDF, DOC hoặc DOCX."));
+      cb(new Error("Chỉ hỗ trợ file PDF, Word (.docx, .doc) hoặc TXT."));
     }
   }
 });
@@ -63,23 +67,30 @@ app.post("/api/upload-criteria", upload.single("file"), async (req, res) => {
     const filePath = req.file.path;
     const originalName = req.file.originalname;
     const mimeType = req.file.mimetype;
+    const extension = path.extname(originalName).toLowerCase();
     let extractedText = "";
 
     try {
-      if (mimeType === "application/pdf") {
+      if (mimeType === "application/pdf" || extension === ".pdf") {
         const pdfParse = (await import("pdf-parse")).default;
         const dataBuffer = fs.readFileSync(filePath);
         const pdfData = await pdfParse(dataBuffer);
         extractedText = pdfData.text;
+      } else if (mimeType === "text/plain" || extension === ".txt") {
+        extractedText = fs.readFileSync(filePath, "utf-8");
+      } else if (mimeType === "application/msword" || extension === ".doc") {
+        return res.status(400).json({ error: "Định dạng Word (.doc) cũ không được hỗ trợ để quét tự động. Vui lòng mở file bằng Word, lưu dưới dạng (.docx) hoặc xuất ra file PDF rồi tải lại!" });
       } else {
-        // .doc or .docx
+        // .docx
         const mammoth = await import("mammoth");
         const result = await mammoth.extractRawText({ path: filePath });
         extractedText = result.value;
       }
     } finally {
       // Clean up uploaded file
-      fs.unlinkSync(filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     }
 
     if (!extractedText || extractedText.trim().length < 20) {
@@ -494,100 +505,9 @@ Trả về JSON định dạng chính xác sau:
     res.status(500).json({ error: error.message || "Lỗi tạo cấu trúc slide." });
   }
 });
-const USERS_FILE_PATH = path.join(process.cwd(), "users.json");
 
-// Helper to load authorized users
-const loadUsers = (): string[] => {
-  try {
-    if (!fs.existsSync(USERS_FILE_PATH)) {
-      const defaultUsers = ["giaovien@gmail.com", "thayco@gmail.com"];
-      fs.writeFileSync(USERS_FILE_PATH, JSON.stringify(defaultUsers, null, 2));
-      return defaultUsers;
-    }
-    const data = fs.readFileSync(USERS_FILE_PATH, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Error reading users.json:", error);
-    return [];
-  }
-};
+// Starting the server
 
-// Helper to save authorized users
-const saveUsers = (users: string[]) => {
-  try {
-    fs.writeFileSync(USERS_FILE_PATH, JSON.stringify(users, null, 2));
-  } catch (error) {
-    console.error("Error writing users.json:", error);
-  }
-};
-
-// 9. API: Login endpoint
-app.post("/api/auth/login", (req, res) => {
-  const { email, password } = req.body;
-  const trimmedEmail = (email || "").trim().toLowerCase();
-  const trimmedPassword = (password || "").trim();
-
-  if (!trimmedEmail || !trimmedPassword) {
-    return res.status(400).json({ error: "Vui lòng nhập đầy đủ email và mật khẩu!" });
-  }
-
-  // Admin Verification
-  if (trimmedEmail === "marioslide.animation@gmail.com" && trimmedPassword === "MARIS2026") {
-    return res.json({ success: true, email: trimmedEmail, role: "admin" });
-  }
-
-  // Standard User Verification
-  const users = loadUsers();
-  if (users.map(u => u.toLowerCase()).includes(trimmedEmail) && trimmedPassword === "MARIS2026") {
-    return res.json({ success: true, email: trimmedEmail, role: "user" });
-  }
-
-  return res.status(401).json({ error: "Tài khoản hoặc mật khẩu không chính xác, hoặc chưa được cấp quyền truy cập. Vui lòng liên hệ Maris Slide để được cấp tài khoản." });
-});
-
-// 10. API: Get authorized users list (Admin only)
-app.get("/api/admin/users", (req, res) => {
-  const users = loadUsers();
-  res.json(users);
-});
-
-// 11. API: Add authorized email
-app.post("/api/admin/users/add", (req, res) => {
-  const { email } = req.body;
-  const trimmedEmail = (email || "").trim().toLowerCase();
-
-  if (!trimmedEmail) {
-    return res.status(400).json({ error: "Vui lòng cung cấp email cần cấp phép!" });
-  }
-
-  const users = loadUsers();
-  if (users.includes(trimmedEmail)) {
-    return res.status(400).json({ error: "Email này đã được cấp quyền truy cập từ trước!" });
-  }
-
-  if (trimmedEmail === "marioslide.animation@gmail.com") {
-    return res.status(400).json({ error: "Email này là tài khoản quản trị tối cao, không cần cấp phép thêm!" });
-  }
-
-  const updated = [...users, trimmedEmail];
-  saveUsers(updated);
-  res.json({ success: true, users: updated });
-});
-
-// 12. API: Remove authorized email
-app.post("/api/admin/users/remove", (req, res) => {
-  const { email } = req.body;
-  const trimmedEmail = (email || "").trim().toLowerCase();
-
-  if (!trimmedEmail) {
-    return res.status(400).json({ error: "Vui lòng cung cấp email cần thu hồi!" });
-  }
-
-  const users = loadUsers();
-  const updated = users.filter(u => u !== trimmedEmail);
-  saveUsers(updated);
-  res.json({ success: true, users: updated });
-});
 
 
 
