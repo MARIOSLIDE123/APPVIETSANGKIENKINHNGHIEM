@@ -1,26 +1,13 @@
 {
   "version": 2,
-  "builds": [
+  "routes": [
     {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
     },
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "api/index.ts"
-    },
-    {
-      "source": "/((?!assets|api|favicon.ico|.*\\.).*)",
-      "destination": "/index.html"
+      "src": "/((?!assets|api|favicon.ico|.*\\.).*)",
+      "dest": "/index.html"
     }
   ]
 }
